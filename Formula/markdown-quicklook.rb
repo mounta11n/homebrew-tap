@@ -7,6 +7,10 @@ class MarkdownQuicklook < Formula
   depends_on arch: :arm64
   depends_on :macos
 
+  # xcodebuild needs to resolve Swift Package dependencies which requires network access
+  # and operations that the Homebrew sandbox blocks
+  pour_bottle? only_if: :clt_installed
+
   def install
     # Homebrew copies HEAD repos to build dir without proper submodule structure
     # The PreviewMarkdown/.git is a gitlink file that points to a non-existent path
@@ -36,6 +40,9 @@ class MarkdownQuicklook < Formula
     
     # Ensure .git is a directory (build.sh checks for this)
     mkdir_p pm_git unless pm_git.directory?
+    
+    # Set environment to help with sandbox issues
+    ENV["HOMEBREW_NO_SANDBOX"] = "1"
     
     # Run the build script
     system "./build.sh"
