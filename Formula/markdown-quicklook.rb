@@ -1,21 +1,28 @@
 class MarkdownQuicklook < Formula
   desc "Quick Look preview for Markdown files on macOS"
   homepage "https://github.com/mounta11n/markdown-quicklook"
-  head "https://github.com/mounta11n/markdown-quicklook.git", branch: "main", using: :git
+  head "https://github.com/mounta11n/markdown-quicklook.git", branch: "main"
 
   depends_on xcode: ["16.0", :build]
   depends_on arch: :arm64
   depends_on :macos
 
   def install
-    # Ensure submodules are initialized
-    # Homebrew's HEAD clone doesn't always initialize submodules automatically
-    unless File.directory?("PreviewMarkdown/.git")
-      system "git", "submodule", "update", "--init", "--recursive"
+    # Homebrew copies HEAD repos to build dir without proper submodule structure
+    # We need to manually clone the submodule if it's not properly initialized
+    pm_dir = buildpath/"PreviewMarkdown"
+    
+    if !File.directory?(pm_dir/"PreviewMarkdown.xcodeproj")
+      # Submodule content is missing - clone it directly
+      ohai "Cloning PreviewMarkdown submodule..."
+      rm_rf pm_dir
+      system "git", "clone", "--depth", "1",
+             "https://github.com/smittytone/PreviewMarkdown.git",
+             pm_dir.to_s
     end
     
     # Verify submodule exists
-    odie "PreviewMarkdown submodule not found" unless File.directory?("PreviewMarkdown")
+    odie "PreviewMarkdown not found after clone" unless File.directory?(pm_dir/"PreviewMarkdown.xcodeproj")
     
     # Run the build script
     system "./build.sh"
