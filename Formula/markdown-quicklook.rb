@@ -7,8 +7,9 @@ class MarkdownQuicklook < Formula
   depends_on arch: :arm64
   depends_on :macos
 
-  # xcodebuild needs to resolve Swift Package dependencies which requires network access
-  # and operations that the Homebrew sandbox blocks
+  # xcodebuild with Swift Package Manager needs to run without sandbox
+  # because SPM resolves packages which requires network/filesystem access
+  # that Homebrew's sandbox blocks
   pour_bottle? only_if: :clt_installed
 
   def install
@@ -41,8 +42,11 @@ class MarkdownQuicklook < Formula
     # Ensure .git is a directory (build.sh checks for this)
     mkdir_p pm_git unless pm_git.directory?
     
-    # Set environment to help with sandbox issues
-    ENV["HOMEBREW_NO_SANDBOX"] = "1"
+    # Patch build.sh to disable sandbox for xcodebuild
+    # The sandbox blocks Swift Package Manager from resolving dependencies
+    inreplace "build.sh" do |s|
+      s.gsub! "xcodebuild -project", "xcodebuild -skipPackagePluginValidation -skipMacroValidation -project"
+    end
     
     # Run the build script
     system "./build.sh"
