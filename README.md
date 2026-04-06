@@ -19,8 +19,10 @@ Quick Look preview for Markdown files on macOS. Renders `.md` files beautifully 
 **Installation:**
 
 ```bash
-brew install markdown-quicklook
+brew install --HEAD markdown-quicklook
 ```
+
+> Note: This formula requires `--HEAD` because it needs Git submodules for building.
 
 **Usage:**
 1. The formula automatically builds and installs the apps
