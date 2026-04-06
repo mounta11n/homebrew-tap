@@ -2,7 +2,38 @@
 
 Personal Homebrew tap for macOS utilities and tools.
 
-## Installation
+## ⚠️ Known Issue: Sandbox Limitation
+
+**Homebrew's sandbox blocks xcodebuild from resolving Swift Package dependencies.** 
+This means `brew install --HEAD markdown-quicklook` currently fails during the build.
+
+### Workaround: Manual Build + Install Script
+
+Until this is resolved, please build manually:
+
+```bash
+# Clone and build
+git clone --recursive https://github.com/mounta11n/markdown-quicklook.git
+cd markdown-quicklook
+./build.sh
+
+# The apps are now in ~/Applications/
+# To register them with Homebrew (optional):
+brew tap mounta11n/tap
+```
+
+### Alternative: Create a Release with Pre-built Apps
+
+If you want true Homebrew automation, you can create a GitHub release:
+
+1. Build locally: `./build.sh`
+2. Create a ZIP: `cd ~/Applications && zip -r markdown-quicklook.zip PreviewMarkdown.app QLToggle.app`
+3. Create a GitHub release and upload the ZIP
+4. Update the formula with the release URL and SHA256
+
+---
+
+## Installation (once sandbox issue is resolved)
 
 Tap this repository:
 
