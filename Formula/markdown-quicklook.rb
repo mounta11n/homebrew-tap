@@ -9,11 +9,21 @@ class MarkdownQuicklook < Formula
 
   def install
     # Homebrew copies HEAD repos to build dir without proper submodule structure
-    # We need to manually clone the submodule if it's not properly initialized
+    # The PreviewMarkdown/.git is a gitlink file that points to a non-existent path
+    # We need to fix this for build.sh's check to pass
     pm_dir = buildpath/"PreviewMarkdown"
+    pm_git = pm_dir/".git"
     
-    if !File.directory?(pm_dir/"PreviewMarkdown.xcodeproj")
-      # Submodule content is missing - clone it directly
+    # Check if .git is a broken gitlink file (common with Homebrew's HEAD installs)
+    if pm_git.exist? && pm_git.file?
+      ohai "Fixing broken gitlink..."
+      rm pm_git
+      # Create a minimal .git directory so build.sh's check passes
+      mkdir_p pm_git
+    end
+    
+    # Verify xcodeproj exists, if not we need to re-clone
+    unless (pm_dir/"PreviewMarkdown.xcodeproj").directory?
       ohai "Cloning PreviewMarkdown submodule..."
       rm_rf pm_dir
       system "git", "clone", "--depth", "1",
@@ -22,7 +32,10 @@ class MarkdownQuicklook < Formula
     end
     
     # Verify submodule exists
-    odie "PreviewMarkdown not found after clone" unless File.directory?(pm_dir/"PreviewMarkdown.xcodeproj")
+    odie "PreviewMarkdown not found after setup" unless (pm_dir/"PreviewMarkdown.xcodeproj").directory?
+    
+    # Ensure .git is a directory (build.sh checks for this)
+    mkdir_p pm_git unless pm_git.directory?
     
     # Run the build script
     system "./build.sh"
